@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Music List</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.css}" />
+    <link rel="stylesheet" th:href="@{/css/font-awesome.css}" />
+    <style>
+        .td1 {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .td2 {
+            word-wrap: break-word   ;
+        }
+    </style>
+</head>
+
+<body class="container">
+<h1>Music List</h1>
+<hr/>
+<div class="row">
+    <div class="col-md-4" id="left">
+        <div class="alert alert-warning alert-dismissible fade in" id="monitorAns">
+            <h2 th:text="${dbInfo.getDb_name()}" style="margin: 0px"></h2>
+            <hr/>
+            <p>creator:	<a th:text="${dbInfo.getCreator()}"></a> </p>
+            <p>built_time:	<a th:text="${dbInfo.getBuilt_time()}"></a></p>
+            <p>triple num:	<a th:text="${dbInfo.getTriple_num()}"></a></p>
+            <p>entity num:	<a th:text="${dbInfo.getEntity_num()}"></a></p>
+            <p>literal num:	 <a th:text="${dbInfo.getLiteral_num()}"></a></p>
+            <p>subject num:	<a th:text="${dbInfo.getSubject_num()}"></a></p>
+            <p>predicate num: <a th:text="${dbInfo.getPredicate_num()}"></a></p>
+            <p>connection num:	<a th:text="${dbInfo.getConnection_num()}"></a></p>
+        </div>
+    </div>
+    <div class="col-md-8" id="right">
+        <form class="form-horizontal" th:action="@{/bySparql}" method="post">
+            <div class="form-group">
+                <label for="sparql" class="col-sm-1 control-label">Query</label>
+                <div class="col-sm-11">
+                    <textarea class="form-control" name="sparql" id="sparql" th:text="${sparql}" placeholder="Query text" required style="height: 300px"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-9">
+                    <input type="submit" value="Submit" class="btn btn-info"/>
+                    &nbsp; &nbsp; &nbsp;
+                    <input type="reset" value="Reset" class="btn btn-info"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<hr style="margin: 0px"/>
+
+<div class="with:80%">
+    <p>
+        <a th:if="${!result.get('status').get(0).get('statusCode').getValue().equals('0')}"
+                     th:text="'Error: '+ ${result.get('status').get(0).get('statusCode').toString()
+                            + '. ' + result.get('status').get(0).get('statusMsg').toString()}"></a>
+    </p>
+    <p>
+        <a th:if="${result.get('musicList').size()==0
+        && result.get('status').get(0).get('statusCode').getValue().equals('0')}">
+            Output: The result of this query is empty!</a>
+    </p>
+    <table id="musicList" class="table table-hover table-striped" style="table-layout:fixed"
+           th:if="${result.get('status').get(0).get('statusCode').getValue().equals('0') && result.get('musicList').size()!=0}">
+        <thead>
+        <tr>
+            <th th:each="att:${result.get('musicList').get(0).keySet().toArray()}" th:text="${att}"></th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr th:each="music : ${result.get('musicList')}">
+            <td th:each="item : ${music}" th:text="${item.getValue().getValue()}" class="td1" onmouseover="this.className='td2'" onmouseout="this.className='td1'">Flian</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="modal-footer no-margin-top" th:if="${result.get('status').get(0).get('statusCode').getValue().equals('0')}">
+        <ul class="pagination pull-right no-margin">
+            <li>
+                <a th:href="'/bySparql?pageNum=1'">First</a>
+            </li>
+
+            <li class="prev">
+                <a th:href="'/bySparql?pageNum=' + (${pageNum}-1)">
+                    <i class="ace-icon fa fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li th:each="nav:${navigatePageNum}">
+                <a th:href="'/bySparql?pageNum='+${nav}" th:text="${nav}" th:if="${nav != pageNum && nav!=0}"></a>
+                <span style="font-weight: bold;background: #6FAED9;" th:if="${nav == pageNum && nav!=0}" th:text="${nav}" ></span>
+            </li>
+
+            <li class="next">
+                <a th:href="'/bySparql?pageNum=' + (${pageNum}+1)">
+                    <i class="ace-icon fa fa-angle-double-right"></i>
+                </a>
+            </li>
+
+            <li>
+                <a th:href="'/bySparql?pageNum=' + ${totalPages}">Last</a>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
